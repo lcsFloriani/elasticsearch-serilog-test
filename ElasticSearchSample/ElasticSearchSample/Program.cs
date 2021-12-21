@@ -1,3 +1,4 @@
+using ElasticSearchSample;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
 
@@ -19,6 +20,8 @@ builder.Host.UseSerilog((ctx, lc) => lc
         IndexFormat = $"logsapi-{DateTime.UtcNow:yyyy-MM-dd}"
     })
     .ReadFrom.Configuration(builder.Configuration));
+
+builder.Services.AddScoped<ILoggerService, LoggerService>();
 
 WebApplication? app = builder.Build();
 
