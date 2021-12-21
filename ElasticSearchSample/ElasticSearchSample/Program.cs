@@ -8,24 +8,17 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-Log.Logger = new LoggerConfiguration()
-                        .Enrich.FromLogContext()
-                        .WriteTo.SQLite(sqliteDbPath: builder.Configuration.GetConnectionString("BaseLog"),
-                                        tableName: "LogsAPI")
-                        .WriteTo.Console()
-                        .CreateLogger();
-
 builder.Host.UseSerilog((ctx, lc) => lc
     .Enrich.FromLogContext()
-    .WriteTo.Elasticsearch(options: new ElasticsearchSinkOptions(
-                                    new Uri(builder.Configuration["Elasticsearch:Uri"]))
+    .WriteTo.Debug()
+    .WriteTo.Console()
+    .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(builder.Configuration["ElasticConfiguration:Uri"]))
     {
         AutoRegisterTemplate = true,
         AutoRegisterTemplateVersion = AutoRegisterTemplateVersion.ESv7,
-        IndexFormat = "logsapi-{0:yyyy.MM}"
+        IndexFormat = $"logsapi-{DateTime.UtcNow:yyyy-MM-dd}"
     })
-    .WriteTo.SQLite(sqliteDbPath: builder.Configuration.GetConnectionString("BaseLog"), tableName: "LogsAPI")
-    .WriteTo.Console());
+    .ReadFrom.Configuration(builder.Configuration));
 
 WebApplication? app = builder.Build();
 
@@ -44,4 +37,3 @@ app.MapControllers();
 Log.Information("Iniciando API");
 
 app.Run();
-
